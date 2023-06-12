@@ -79,12 +79,33 @@ class Line (Vector):
             raise TypeError('This is not a line ecuation')
         self._mode = modo
 
+    def _implicit(ecuation1,ecuation2,ecuation3):
+
+        for x,v1 in ecuation1:
+            for y,v2 in ecuation2:
+                x_ = str(v2) + 'x'
+                n1_ = v2 * x
+                y_ = str(v1) + 'y'
+                n2_ = v1 * y
+
+        ec1 = '-'+ x_ + y_ + str(-n1_ + n2_)
+
+        for x,v1 in ecuation1:
+            for z,v3 in ecuation3:
+                x__ = str(v3) + 'x'
+                n3_ = v3 * x
+                z_ = str(v1) + 'z'
+                n4_ = v1 * z
+        ec2 =  '-'+ x__ + z_ + str(-n3_ + n4_)  
+
+        return ec1,ec2         
+
     def __str__(self):
         
         for (point,vector) in self._lines.items():
             
             if self._mode == 'vectorial':
-                return '(x,y,z) = ' + str(point) + 't' + str(vector)
+                return '(x,y,z) = (' + str(point) + ') + t' + str(vector)
             
             elif self._mode == 'parametrics':
                 return 'x = ' + str(point.get_coordinates(point)[0]) + ' + ' + str(vector.get_coordinates(vector)[0])+'t \n' + 'y = ' + str(point.get_coordinates(point)[1]) + ' + ' + str(vector.get_coordinates(vector)[1])+'t \n' + 'z = ' + str(point.get_coordinates(point)[2]) + ' + ' + str(vector.get_coordinates(vector)[2])+'t \n'
@@ -95,4 +116,14 @@ class Line (Vector):
             
             elif self._mode == 'implicit':
                 
-                pass
+                for ec1, ec2 in self._implicit((point.get_coordinates(point)[0],vector.get_coordinates(vector)[0]),(point.get_coordinates(point)[1],vector.get_coordinates(vector)[1]),(point.get_coordinates(point)[2],vector.get_coordinates(vector)[2])):
+
+                    return ec1 + '= 0 \n' + ec2 + '= 0'
+                
+class Plane(Vector):
+
+    def __init__(self,vector,point, plane, mode, ob1 = None ,ob2 = None,ob3= None):
+
+        super().__init__(vector,point)
+        self._planes = {plane : (ob1 ,ob2 ,ob3)}
+        self._mode = mode 
