@@ -28,10 +28,10 @@ class Point:
         
         for point,coordinates in self._points.items():
             if rpr == None:
-                return str(point) + ':' + str(self.change_representation(rpr,coordinates)) + '\n'
+                return 'point:' + str(self._points[point]) + ':' + str(self.change_representation(rpr,coordinates)) + '\n'
             else:
                 
-                return str(point) + ':' + str(self) + '\n'
+                return 'point:' + str(self._points[point])+ ':' + str(self.change_representation(rpr,coordinates)) + '\n'
 class Vector(Point):
     def __init__(self, vector):
         self._vectors = {vector : (0,0,0)}
@@ -62,31 +62,37 @@ class Vector(Point):
     
 class Line (Vector):
     
-    def __init__(self, point, vector, line):
+    def __init__(self, point, vector, line, mode = 'implicit'):
         super().__init__(point,vector)
         self._lines = {line: (point,vector)}
-        
+        self._mode = mode 
     def add_line(self, point, vector, line):
         if line in self._lines.keys():
             raise TypeError('Line already exists')
         
         self._lines[line] = (Point(point), Vector(vector))
-        
-        
-    def __str__(self, ecuation:str):
+
+    def change_mode(self,modo:str):
+
+        m = ['vectorial', 'parametrics', 'continuous', 'implicit']
+        if modo not in m:
+            raise TypeError('This is not a line ecuation')
+        self._mode = modo
+
+    def __str__(self):
         
         for (point,vector) in self._lines.items():
             
-            if ecuation == 'vectorial':
+            if self._mode == 'vectorial':
                 return '(x,y,z) = ' + str(point) + 't' + str(vector)
             
-            elif ecuation == 'paramétrica':
+            elif self._mode == 'parametrics':
                 return 'x = ' + str(point.get_coordinates(point)[0]) + ' + ' + str(vector.get_coordinates(vector)[0])+'t \n' + 'y = ' + str(point.get_coordinates(point)[1]) + ' + ' + str(vector.get_coordinates(vector)[1])+'t \n' + 'z = ' + str(point.get_coordinates(point)[2]) + ' + ' + str(vector.get_coordinates(vector)[2])+'t \n'
             
-            elif ecuation == 'continua':
+            elif self._mode == 'continuous':
                 
                 return 'x - '+ str(point.get_coordinates(point)[0])+ '/ ' + str(vector.get_coordinates(vector)[0]) + ' = y - ' + str(point.get_coordinates(point)[1]) + ' / ' + str(vector.get_coordinates(vector)[1]) + '= z - ' + str(point.get_coordinates(point)[2]) +' / ' + str(vector.get_coordinates(vector)[2])
             
-            elif ecuation == 'implícita':
+            elif self._mode == 'implicit':
                 
                 pass
