@@ -37,7 +37,25 @@ class Point:
             x1,y1,z1 = self._points.get(other)
             x2,y2,z2 = self._points.get(self)
             self._points[self] = (x1+x2,y1+y2,z1+z2)
-        return self
+            return self
+        elif not isinstance(other, Point):
+            x1,y1,z1 = other.get_coordinates(other)
+            x2,y2,z2 = self._points.get(self)
+            self._points[self] = (x1+x2,y1+y2,z1+z2)
+            return self
+    def __sub__(self,other):
+
+        if isinstance(other,Point):
+            x1,y1,z1 = self._points.get(other)
+            x2,y2,z2 = self._points.get(self)
+            self._points[self] = (x2-x1,y2-y1,z2-z1)
+            return self
+        elif not isinstance(other, Point):
+            x1,y1,z1 = other.get_coordinates(other)
+            x2,y2,z2 = self._points.get(self)
+            self._points[self] = (x2-x1,y2-y1,z2-z1)
+            return self
+        
     def __str__(self, rpr = None):
         
         for point,coordinates in self._points.items():
@@ -56,13 +74,13 @@ class Vector(Point):
         self._vectors[vector] = (x,y,z)
         
     def add_vector_point(self, point1,point2 , vector):
-        (x1,y1,z1) = Point(point1) #donde sale el vector
-        (x2,y2,z2) = Point (point2) #donde acaba
+        #(x1,y1,z1) = Point(point1) #donde sale el vector
+        #(x2,y2,z2) = Point (point2) #donde acaba
         
         if vector in self._vectors.keys():
             raise TypeError('Vertex already exists')
-        self._vectors[vector] = (x2-x1,y2-y1,z2-z1)
-    
+        #self._vectors[vector] = (x2-x1,y2-y1,z2-z1)
+        self._vectors[vector] = (point2-point1)
     def get_vector(self,vector):
         if vector not in self._vectors.keys():
             raise TypeError('This vector does not exist')
@@ -73,6 +91,31 @@ class Vector(Point):
     
     def change_representation(self, t, coordinates):
         return super().change_representation(t, coordinates)
+    
+    def __add__(self, other):
+
+        if isinstance(other,Vector):
+            return super().__add__(other)
+    def __radd__(self,other):
+
+        if isinstance(other,Point):
+            x1,y1,z1 = tuple(Point.get_coordinates(other))
+            x2,y2,z2 = self._vectors.get(self)
+            self._points[self] = (x1+x2,y1+y2,z1+z2)
+        return self
+    
+    def __sub__(self, other):
+
+        if isinstance(other,Vector):
+            return super().__sub__(other)
+        
+    def __rsub__(self,other):
+
+        if isinstance(other,Point):
+            x1,y1,z1 = tuple(Point.get_coordinates(other))
+            x2,y2,z2 = self._vectors.get(self)
+            self._points[self] = (x2-x1,y2-y1,z2-z1)
+        return self
     
     def __str__(self, rpr=None):
         return super().__str__(rpr)
