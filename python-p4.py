@@ -31,7 +31,13 @@ class Point:
         if x1%x2 == 0 and y1%y2 == 0 and z1%z2 == 0:
             return True
         return False
-        
+    
+    def __add__(self,other):
+        if isinstance(other,Point):
+            x1,y1,z1 = self._points.get(other)
+            x2,y2,z2 = self._points.get(self)
+            self._points[self] = (x1+x2,y1+y2,z1+z2)
+        return self
     def __str__(self, rpr = None):
         
         for point,coordinates in self._points.items():
