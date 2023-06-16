@@ -1,3 +1,4 @@
+import numpy as np
 class Point:
     
     def __init__(self, point):
@@ -24,6 +25,13 @@ class Point:
         for x,y,z in coordinates:
             return t(x),t(y),t(z)
         
+    def aligned(self,point1, point2):
+        x1,y1,z1 = self.get_coordinates(point1)
+        x2,y2,z2 = self.get_coordinates(point2)
+        if x1%x2 == 0 and y1%y2 == 0 and z1%z2 == 0:
+            return True
+        return False
+        
     def __str__(self, rpr = None):
         
         for point,coordinates in self._points.items():
@@ -34,7 +42,7 @@ class Point:
                 return 'point:' + str(self._points[point])+ ':' + str(self.change_representation(rpr,coordinates)) + '\n'
 class Vector(Point):
     def __init__(self, vector):
-        self._vectors = {vector : (0,0,0)}
+        self._vectors = {vector : (0.00,0.00,0.00)}
         
     def add_vector(self,vector, x, y, z):
         if vector in self._vectors.keys():
@@ -54,6 +62,9 @@ class Vector(Point):
             raise TypeError('This vector does not exist')
         return self._vectors[vector]
     
+    def independent(self,v1,v2):
+        return super().aligned(v1,v2)
+    
     def change_representation(self, t, coordinates):
         return super().change_representation(t, coordinates)
     
@@ -62,7 +73,7 @@ class Vector(Point):
     
 class Line (Vector):
     
-    def __init__(self, point, vector, line, mode = 'implicit'):
+    def __init__(self, point:Point, vector:Vector, line, mode = 'implicit'):
         super().__init__(point,vector)
         self._lines = {line: (point,vector)}
         self._mode = mode 
@@ -122,8 +133,76 @@ class Line (Vector):
                 
 class Plane(Vector):
 
-    def __init__(self,vector,point, plane, mode, ob1 = None ,ob2 = None,ob3= None):
+    def __init__(self,vector:Vector,point:Point, plane, mode='implicit'):
 
         super().__init__(vector,point)
-        self._planes = {plane : (ob1 ,ob2 ,ob3)}
-        self._mode = mode 
+        self._planes = {plane : (point,vector)}
+        self._mode = mode
+        self._ecuation = {plane: (None,None,None)}
+
+    def add_plane_(self,plane,*args):
+        #para calcular el plano con tres puntos
+        if plane in self._planes.keys():
+            raise TypeError('Plane already exists')
+        for point1,point2,point3 in args:
+            if isinstance(point1,Point) and isinstance(point2,Point) and isinstance(point3, Point):
+                if Point.aligned(point1,point2) or Point.aligned(point2,point3) or Point.aligned(point1,point3):
+                    raise TypeError('You cannot add a plane if 3 points are aligned')
+                v1 = self.add_vector_point(point1,point2) #!!!!!Cuidado
+                v2 = self.add_vector_point(point2,point3)
+                self._ecuation[plane] = (point1,v1,v2)
+                m1 = np.array([[self.get_coordinates(v1)[1],self.get_coordinates(v1)[2]],[self.get_coordinates(v2)[1],self.get_coordinates(v2)[2]]]) #para calcular el vector normal
+                m2 = np.array([[self.get_coordinates(v1)[0],self.get_coordinates(v1)[2]],[self.get_coordinates(v2)[0],self.get_coordinates(v2)[2]]])
+                m3 = np.array([[self.get_coordinates(v1)[0],self.get_coordinates(v1)[1]],[self.get_coordinates(v2)[0],self.get_coordinates(v2)[1]]])
+                i = np.linalg.det(m1)
+                j = np.linalg.det(m2)
+                k = np.linalg.det(m3)
+                normal = (i,j,k)
+                self._planes[plane] = (point1,normal)
+        for vector1, vector2, point in args:
+            if isinstance(vector1, Vector) and isinstance(vector2, Vector):
+                if self.independent(v1,v2):
+                    raise TypeError('The two vectors need to be linearly independent')
+                self._ecuation[plane] = (point,vector1,vector2)
+                n1 = np.array([[self.get_coordinates(v1)[1],self.get_coordinates(v1)[2]],[self.get_coordinates(v2)[1],self.get_coordinates(v2)[2]]]) #para calcular el vector normal
+                n2 = np.array([[self.get_coordinates(v1)[0],self.get_coordinates(v1)[2]],[self.get_coordinates(v2)[0],self.get_coordinates(v2)[2]]])
+                n3 = np.array([[self.get_coordinates(v1)[0],self.get_coordinates(v1)[1]],[self.get_coordinates(v2)[0],self.get_coordinates(v2)[1]]])
+                x = np.linalg.det(n1)
+                y = np.linalg.det(n2)
+                z = np.linalg.det(n3)
+                perpendicular = (x,y,z)
+                self._planes[plane] = (point,perpendicular)
+    def get_plane(self,plane):
+        if plane not in self._planes.keys():
+            raise TypeError('This plane does not exist')
+        return self._planes[plane]
+
+    def change_mode(self,modo:str):
+
+        m = ['vectorial', 'parametrics', 'continuous', 'implicit']
+        if modo not in m:
+            raise TypeError('This is not a line ecuation')
+        self._mode = modo
+
+    def _implicit(self,plane):
+        for point, normal in self._planes[plane]:
+            d = -(self.get_coordinates(point)[0]*self.get_coordinates(normal)[0]) - (self.get_coordinates(point)[1]*self.get_coordinates(normal)[1]) - (self.get_coordinates(point)[2]*self.get_coordinates(normal)[2])
+        return self.get_coordinates(normal) + [d]
+                
+
+    def __str__(self):
+
+        for (p,v_1, v_2) in self._ecuation.values():
+            
+            if self._mode == 'vectorial':
+                return '(x,y,z) = (' + str(p) + ') + t' + str(v_1) + 'r' + str(v_2)
+            
+            elif self._mode == 'parametrics':
+                return 'x = ' + str(self.get_coordinates(p)[0]) + ' + ' + str(self.get_coordinates(v_1)[0])+'t' + ' + ' + str(self.get_coordinates(v_2)[0])+'u \n' + 'y = ' + str(self.get_coordinates(p)[1]) + ' + ' + str(self.get_coordinates(v_1)[1])+'t' + ' + ' + str(self.get_coordinates(v_2)[1])+'u \n' + 'z = ' + str(self.get_coordinates(p)[2]) + ' + ' + str(self.get_coordinates(v_1)[2])+'t' + ' + ' + str(self.get_coordinates(v_2)[2])+'u \n' 
+            
+            
+            elif self._mode == 'implicit':
+                for plane in self._ecuation.keys():
+                    if self._ecuation[plane] == (p,v_1,v_2):
+                        return str(self._implicit(plane)[0]) + 'x' + str(self._implicit(plane)[1]) + 'y' + str(self._implicit(plane)[2]) +'z' +str(self._implicit(plane)[3]) +'= 0'
+        
