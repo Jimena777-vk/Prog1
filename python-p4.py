@@ -1,4 +1,5 @@
 import numpy as np
+import math
 class Point:
     
     def __init__(self, point):
@@ -72,7 +73,12 @@ class Vector(Point):
         if vector in self._vectors.keys():
             raise TypeError('Vertex already exists')
         self._vectors[vector] = (x,y,z)
-        
+    
+    def update_vector(self,vector,item):
+        if vector not in self._vectors.items():
+            raise TypeError('This vector doesnt exists')
+        self._vectors[vector] = item
+         
     def add_vector_point(self, point1,point2 , vector):
         #(x1,y1,z1) = Point(point1) #donde sale el vector
         #(x2,y2,z2) = Point (point2) #donde acaba
@@ -85,6 +91,19 @@ class Vector(Point):
         if vector not in self._vectors.keys():
             raise TypeError('This vector does not exist')
         return self._vectors[vector]
+    
+    def module(self):
+        return math.sqrt(self.get_coordinates()[0] **2 + self.get_coordinates()[1] **2 + self.get_coordinates()[2] **2)
+    
+    def escalar(self,vector2):
+        if len(self.get_coordinates(self)) != len(self.get_coordinates(vector2)):
+            raise TypeError('You cant multiply two vectors of different lenght')
+        e = self.get_coordinates(self)[0] * self.get_coordinates(vector2)[0] + self.get_coordinates(self)[1] * self.get_coordinates(vector2)[1] + self.get_coordinates(self)[2] * self.get_coordinates(vector2)[2]
+        return e
+    
+    def angle(self,vector2):
+        cos = self.escalar(vector2)/(self.module() * vector2.module())
+        return cos
     
     def independent(self,v1,v2):
         return super().aligned(v1,v2)
@@ -117,6 +136,25 @@ class Vector(Point):
             self._points[self] = (x2-x1,y2-y1,z2-z1)
         return self
     
+    def __mul__(self,other):
+        
+        if type(other) == int or type(other) == float:
+           c = [other * coordinate for coordinate in self.get_coordinates(self)]
+           self.update_vector(self,tuple(c))
+           return self.get_vector(self)
+        
+        elif isinstance(other, Vector):#vale también para el vector afín de un punto
+            #también producto vectorial
+            for c2 in self.get_coordinates(self):
+                n = [c1*c2 for c1 in other.get_coordinates(self)]
+            self.add_vector(self+other,n[0],n[1],n[2])
+            return self.get_vector(self)
+    def __rmul__(other,self):
+        
+        if isinstance(self,Vector):
+            other.__mul__(self)
+         
+    
     def __str__(self, rpr=None):
         return super().__str__(rpr)
     
@@ -131,6 +169,10 @@ class Line (Vector):
             raise TypeError('Line already exists')
         
         self._lines[line] = (Point(point), Vector(vector))
+    
+    def get_director(self):
+        for point, vector in self._lines[self]:
+            return vector
 
     def change_mode(self,modo:str):
 
@@ -158,7 +200,21 @@ class Line (Vector):
                 n4_ = v1 * z
         ec2 =  '-'+ x__ + z_ + str(-n3_ + n4_)  
 
-        return ec1,ec2         
+        return ec1,ec2
+    
+    def __mul__(vector, other):
+        
+        if isinstance(other,Point):
+            raise TypeError('Cant multiply a line and a point')
+        elif isinstance(other,Vector): #para el plano se debe hacer con el normal
+            return super().__mul__(other)
+        elif isinstance(other,Line):
+            return super().__mul__(other.get_director())
+    
+    def __rmul__(other, vector):
+        if isinstance(other,Point):
+            raise TypeError('Cant multiply a line and a point')
+        return super().__rmul__(vector)         
 
     def __str__(self):
         
@@ -208,6 +264,7 @@ class Plane(Vector):
                 k = np.linalg.det(m3)
                 normal = (i,j,k)
                 self._planes[plane] = (point1,normal)
+        #con dos vectores in un punto
         for vector1, vector2, point in args:
             if isinstance(vector1, Vector) and isinstance(vector2, Vector):
                 if self.independent(v1,v2):
@@ -225,6 +282,10 @@ class Plane(Vector):
         if plane not in self._planes.keys():
             raise TypeError('This plane does not exist')
         return self._planes[plane]
+    
+    def get_normal(self):
+        for point,vector in self._points[self]:
+            return vector
 
     def change_mode(self,modo:str):
 
@@ -237,7 +298,12 @@ class Plane(Vector):
         for point, normal in self._planes[plane]:
             d = -(self.get_coordinates(point)[0]*self.get_coordinates(normal)[0]) - (self.get_coordinates(point)[1]*self.get_coordinates(normal)[1]) - (self.get_coordinates(point)[2]*self.get_coordinates(normal)[2])
         return self.get_coordinates(normal) + [d]
-                
+    
+    def __mul__(vector, other):
+        return super().__mul__(other)
+    
+    def __rmul__(other, vector):
+        return super().__rmul__(vector)          
 
     def __str__(self):
 
