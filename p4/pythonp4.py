@@ -57,6 +57,9 @@ class Vector:
         if vector not in self._vectors.items():
             raise TypeError('This vector doesnt exists')
         self._vectors[vector] = item
+    
+    def add_vector(self,coordinates):
+        self._vectors['coordinates'] = coordinates
          
     def add_vector_point(self, point1,point2):
         
@@ -240,10 +243,11 @@ class Plane(Vector,Point):
             i = np.linalg.det(m1)
             j = np.linalg.det(m2)
             k = np.linalg.det(m3)
-            normal = (i,j,k)
+            normal = Vector('normal',None)
+            normal.add_vector((i,j,k))
             self._planes['elements'] = (elem1,normal)
         #con dos vectores in un punto
-        if isinstance(elem1, Vector) and isinstance(elem2, Vector):
+        if isinstance(elem1, Vector) and isinstance(elem2, Vector) and isinstance(elem3,Point):
             if elem1.independent(elem2):
                 raise TypeError('The two vectors need to be linearly independent')
             self._ecuation[self] = (elem3,elem1,elem2)
@@ -253,7 +257,8 @@ class Plane(Vector,Point):
             x = np.linalg.det(n1)
             y = np.linalg.det(n2)
             z = np.linalg.det(n3)
-            perpendicular = (x,y,z)
+            perpendicular = Vector('normal',None)
+            perpendicular.add_vector((x,y,z))
             self._planes['elements'] = (elem3,perpendicular)
     def get_plane(self,plane):
         if plane not in self._planes.keys():
@@ -270,7 +275,7 @@ class Plane(Vector,Point):
         m = ['vectorial', 'parametrics', 'continuous', 'implicit']
         if modo not in m:
             raise TypeError('This is not a line ecuation')
-        self._mode = modo
+        self._planes['mode'] = modo
 
     def _implicit(self):
         point, normal = self._planes['elements']
@@ -283,7 +288,7 @@ class Plane(Vector,Point):
     def __rmul__(other, vector):
         return super().__rmul__(vector)          
 
-    def __str__(self):
+    def __str__(self, mode = 'implicit'):
 
         #for (p,v_1, v_2) in self._ecuation.values():
             
@@ -294,9 +299,7 @@ class Plane(Vector,Point):
                 #return 'x = ' + str(self.get_coordinates(p)[0]) + ' + ' + str(self.get_coordinates(v_1)[0])+'t' + ' + ' + str(self.get_coordinates(v_2)[0])+'u \n' + 'y = ' + str(self.get_coordinates(p)[1]) + ' + ' + str(self.get_coordinates(v_1)[1])+'t' + ' + ' + str(self.get_coordinates(v_2)[1])+'u \n' + 'z = ' + str(self.get_coordinates(p)[2]) + ' + ' + str(self.get_coordinates(v_1)[2])+'t' + ' + ' + str(self.get_coordinates(v_2)[2])+'u \n' 
             
             
-        if self._planes['mode'] == 'implicit':
-            
-            normal = self.get_normal()
-            
-            return str(self._planes['plane'])+':'+ str(normal.get_coordinates()[0]) + 'x' + str(normal.get_coordinates()[1]) + 'y' + str(normal.get_coordinates()[2]) +'z' +str(self._implicit()) +'= 0'
-        
+        #if self._planes['mode'] == mode:    
+        normal = self.get_normal()
+        return str(self._planes['plane']) + ':' + str(normal.get_coordinates()[0])+'x + ' +str(normal.get_coordinates()[1])+'y + '+ str(normal.get_coordinates()[2])+'z + ' + str(self._implicit()) + ' = 0'
+
