@@ -224,9 +224,9 @@ class Line (Vector):
                 
 class Plane(Vector,Point):
 
-    def __init__(self,plane,vector:Vector,point:Point, mode='implicit'):
+    def __init__(self,plane,vector:Vector,point:Point):
 
-        self._planes = {'plane':plane, 'elements' : (point,vector), 'mode': mode}
+        self._planes = {'plane':plane, 'elements' : (point,vector)}
         self._ecuation = {self._planes['plane']: (None,None,None)}
 
     def add_plane_(self,elem1,elem2,elem3):
@@ -269,7 +269,11 @@ class Plane(Vector,Point):
         point,vector = self._planes['elements']
         
         return vector
-
+    def get_ecuation(self):
+        e = []
+        for elem in self._ecuation[self]:
+            e.append(elem)
+        return e
     def change_mode(self,modo:str):
 
         m = ['vectorial', 'parametrics', 'continuous', 'implicit']
@@ -282,6 +286,15 @@ class Plane(Vector,Point):
         d = -(point.get_coordinates()[0]*normal.get_coordinates()[0]) - (point.get_coordinates()[1]*normal.get_coordinates()[1]) - float((point.get_coordinates()[2]*normal.get_coordinates()[2]))
         return d
     
+    def imprimir(self,mode='implicit'):
+
+        if mode == 'implicit':
+            self.impression = 0
+        elif mode == 'vectorial':
+            self.impression = 1
+        elif mode == 'parametrics':
+            self.impression = 2
+        
     def __mul__(vector, other):
         return super().__mul__(other)
     
@@ -290,16 +303,20 @@ class Plane(Vector,Point):
 
     def __str__(self, mode = 'implicit'):
 
-        #for (p,v_1, v_2) in self._ecuation.values():
-            
-            #if self._mode == 'vectorial':
-                #return '(x,y,z) = (' + str(p) + ') + t' + str(v_1) + 'r' + str(v_2)
-            
-            #elif self._mode == 'parametrics':
-                #return 'x = ' + str(self.get_coordinates(p)[0]) + ' + ' + str(self.get_coordinates(v_1)[0])+'t' + ' + ' + str(self.get_coordinates(v_2)[0])+'u \n' + 'y = ' + str(self.get_coordinates(p)[1]) + ' + ' + str(self.get_coordinates(v_1)[1])+'t' + ' + ' + str(self.get_coordinates(v_2)[1])+'u \n' + 'z = ' + str(self.get_coordinates(p)[2]) + ' + ' + str(self.get_coordinates(v_1)[2])+'t' + ' + ' + str(self.get_coordinates(v_2)[2])+'u \n' 
-            
-            
-        #if self._planes['mode'] == mode:    
-        normal = self.get_normal()
-        return str(self._planes['plane']) + ':' + str(normal.get_coordinates()[0])+'x + ' +str(normal.get_coordinates()[1])+'y + '+ str(normal.get_coordinates()[2])+'z + ' + str(self._implicit()) + ' = 0'
+        if self.impression == 0: 
+            normal = self.get_normal()
+            return str(self._planes['plane']) + ':' + str(normal.get_coordinates()[0])+'x + ' +str(normal.get_coordinates()[1])+'y + '+ str(normal.get_coordinates()[2])+'z + ' + str(self._implicit()) + ' = 0'
+
+        elif self.impression == 1:
+            p = self.get_ecuation()[0]
+            v1 = self.get_ecuation()[1]
+            v2 = self.get_ecuation()[2]
+            return '(x,y,z) = ' + str(tuple(p.get_coordinates())) + ' + t' + str(tuple(v1.get_coordinates())) + 'r' + str(tuple(v2.get_coordinates()))
+        
+        elif self.impression == 2:
+            p = self.get_ecuation()[0]
+            v1 = self.get_ecuation()[1]
+            v2 = self.get_ecuation()[2]
+            return 'x = ' + str(p.get_coordinates()[0]) + ' + ' + str(v1.get_coordinates()[0])+'t' + ' + ' + str(v2.get_coordinates()[0])+'u \n' + 'y = ' + str(p.get_coordinates()[1]) + ' + ' + str(v1.get_coordinates()[1])+'t' + ' + ' + str(v2.get_coordinates()[1])+'u \n' + 'z = ' + str(p.get_coordinates()[2]) + ' + ' + str(v1.get_coordinates()[2])+'t' + ' + ' + str(v2.get_coordinates()[2])+'u \n' 
+
 
